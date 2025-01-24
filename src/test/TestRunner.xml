@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Suite" verbose="10" configfailurepolicy="skip">
+    <listeners>
+        <listener class-name="Runner.TestRunnerListener" />
+    </listeners>
+    <test name="Google Search">
+        <parameter name="browser" value= "chrome" />
+        <classes>
+            <class name="UtilitiesFactory.Hooks"/>
+            <class name="Runner.HomePageTests" />
+            <class name="Runner.HomeTests" />
+        </classes>
+    </test>
+</suite>
