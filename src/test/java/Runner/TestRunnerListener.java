@@ -58,6 +58,7 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
         System.out.println("Class node created: " + className);
         System.out.println("Method node created: " + methodName);
     }
+
     private void createClassNode(ITestResult iTestResult) {
         if (features == null) {
             String className = iTestResult.getTestClass().getName();

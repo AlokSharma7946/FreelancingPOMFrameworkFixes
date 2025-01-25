@@ -11,14 +11,13 @@ public class Hooks {
     private WebDriver driver;
     private final BrowserFactory browserFactoryInstance = BrowserFactory.getInstance();
 
-
     @BeforeSuite
     @Parameters("browser")
-    public void beforeTest(@Optional("chrome") String browser) {
-        // Ensure the browser is set before driver initialization
-        browserFactoryInstance.setBrowser(browser);
-        browserFactoryInstance.setDriver(browser); // Set driver after setting browser type
-        WebDriver driver = BrowserFactory.getDriver();
+    public void beforeTest(String browser) {
+        // Set browser type from the XML configuration
+        System.out.println("Using browser: " + browser);
+        browserFactoryInstance.setDriver(browser);  // Set the driver based on the browser parameter
+        driver = BrowserFactory.getDriver();  // Get the initialized WebDriver
         if (driver == null) {
             System.out.println("Driver is still null after initialization!");
         }
@@ -26,7 +25,7 @@ public class Hooks {
 
     @BeforeSuite
     @Parameters("browser")
-    public void setup(@Optional("chrome") String browser) {
+    public void setup(String browser) {
         // Initialize ExtentReports
         extentReports = new ExtentReports();
 
@@ -35,4 +34,8 @@ public class Hooks {
         UtilFactory.setScenarioDef(test);  // Initialize scenarioDef here
     }
 
+    @AfterSuite
+    public void cleanUp() {
+        browserFactoryInstance.cleanUp(); // Cleanup the WebDriver after tests
+    }
 }

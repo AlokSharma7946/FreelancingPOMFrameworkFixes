@@ -9,6 +9,7 @@ import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.safari.SafariDriver;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,166 +17,107 @@ import java.util.Map;
 
 public class BrowserFactory {
 
-    private static ThreadLocal<WebDriver> driver = new ThreadLocal<WebDriver>();
+    private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     private static BrowserFactory instance = null;
-    private static String BROWSER;
 
-    // Singleton to make thread safe
-    private BrowserFactory()
-    {
-        // hide this
-    }
+    // Singleton to ensure only one instance of BrowserFactory
+    private BrowserFactory() {}
 
-    public static BrowserFactory getInstance()
-    {
-        if (instance == null)
-        {
+    public static BrowserFactory getInstance() {
+        if (instance == null) {
             instance = new BrowserFactory();
         }
         return instance;
     }
 
-    public final void setDriver(String browser)
-    {
-        switch (browser.toUpperCase())
-        {
-
-            //Emulator settings for Android Mobile
+    public final void setDriver(String browser) {
+        switch (browser.toUpperCase()) {
             case "MOBILE":
-                WebDriverManager.chromedriver().setup();
-                driver.set(new ChromeDriver(chromeOptions_androidMobile()));
+                initializeChromeMobile();
                 break;
-
             case "FIREFOX":
-                WebDriverManager.firefoxdriver().setup();
-                driver.set(new FirefoxDriver(firefoxOptions()));
+                initializeFirefox();
                 break;
-
             case "CHROME":
-//                WebDriverManager.chromedriver().setup();
-                WebDriverManager.chromedriver().driverVersion("132.0.6834.84").setup();
-                driver.set(new ChromeDriver(chromeOptions_desktop()));
+                initializeChrome();
                 break;
-
             case "EDGE":
-                WebDriverManager.edgedriver().setup();
-                driver.set(new EdgeDriver(edgeOptions()));
+                initializeEdge();
                 break;
-
+            case "SAFARI":
+                initializeSafari();
+                break;
             default:
-                WebDriverManager.chromedriver().setup();
-                WebDriverManager.chromedriver().driverVersion("132.0.6834.84").setup();
-                driver.set(new ChromeDriver(chromeOptions_desktop()));
+                initializeChrome();
                 break;
         }
     }
 
-    public static WebDriver getDriver()
-    {
+    public static WebDriver getDriver() {
         return driver.get();
     }
 
+    public void cleanUp() {
+        if (driver.get() != null) {
+            driver.get().quit();
+            driver.remove();
+        }
+    }
+
+    private void initializeChromeMobile() {
+        WebDriverManager.chromedriver().setup();
+        driver.set(new ChromeDriver(chromeOptions_androidMobile()));
+    }
+
+    private void initializeChrome() {
+        WebDriverManager.chromedriver().setup();
+        driver.set(new ChromeDriver(chromeOptions_desktop()));
+    }
+
+    private void initializeFirefox() {
+        WebDriverManager.firefoxdriver().setup();
+        driver.set(new FirefoxDriver(firefoxOptions()));
+    }
+
+    private void initializeEdge() {
+        WebDriverManager.edgedriver().setup();
+        driver.set(new EdgeDriver(edgeOptions()));
+    }
+
+    private void initializeSafari() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("mac")) {
+            driver.set(new SafariDriver());
+        } else {
+            throw new UnsupportedOperationException("Safari is not supported on " + os);
+        }
+    }
+
     private ChromeOptions chromeOptions_androidMobile() {
-
         Map<String, String> mobileEmulation = new HashMap<>();
-
         mobileEmulation.put("deviceName", "Galaxy S5");
 
-        // Setup Chrome environment:
-        ChromeOptions chromeOptions = new ChromeOptions();
-
-        // Add command-line switches:
-        chromeOptions.addArguments("--disable-extensions");
-        chromeOptions.addArguments("--disable-extensions-file-access-check");
-        chromeOptions.addArguments("--disable-extensions-http-throttling");
-        chromeOptions.addArguments("--no-sandbox");
-        chromeOptions.addArguments("--window-size=240,720");
-        chromeOptions.setExperimentalOption("useAutomationExtension", false);
-        chromeOptions.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
-        chromeOptions.addArguments("disable-popup-blocking");
-        chromeOptions.setExperimentalOption("mobileEmulation", mobileEmulation);
-        chromeOptions.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-
-        chromeOptions.addArguments("--enable-automation");
-        if (System.getenv("CHROME_HEADLESS") != null) {
-
-            chromeOptions.addArguments("--headless");
-            chromeOptions.addArguments("--disable-gpu");
-            chromeOptions.addArguments("--disable-setuid-sandbox");
-            chromeOptions.addArguments("--hide-scrollbars");
-            chromeOptions.addArguments("--ignore-ssl-errors");
-        }
-
-        // Set Chrome Profile Preferences
-        Map<String, Object> prefs = new HashMap<String, Object>();
-        prefs.put("credentials_enable_service", false);
-        prefs.put("password_manager_enabled", false);
-        chromeOptions.setExperimentalOption("prefs", prefs);
-
-        return chromeOptions;
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-extensions", "--no-sandbox", "--window-size=240,720");
+        options.setExperimentalOption("mobileEmulation", mobileEmulation);
+        return options;
     }
 
-    private ChromeOptions chromeOptions_desktop()
-    {
-        // Setup Chrome environment:
-        ChromeOptions chromeOptions = new ChromeOptions();
-
-        // Add command-line switches:
-        chromeOptions.addArguments("--disable-extensions");
-        chromeOptions.addArguments("--disable-extensions-file-access-check");
-        chromeOptions.addArguments("--disable-extensions-http-throttling");
-        chromeOptions.addArguments("--no-sandbox");
-        chromeOptions.setExperimentalOption("useAutomationExtension", false);
-        chromeOptions.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
-        chromeOptions.addArguments("disable-popup-blocking");
-        chromeOptions.addArguments("start-maximized");
-        chromeOptions.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-
-        chromeOptions.addArguments("--enable-automation");
-        if (System.getenv("CHROME_HEADLESS") != null)
-        {
-            chromeOptions.addArguments("--headless");
-            chromeOptions.addArguments("--disable-gpu");
-            chromeOptions.addArguments("--disable-setuid-sandbox");
-            chromeOptions.addArguments("--hide-scrollbars");
-            chromeOptions.addArguments("--ignore-ssl-errors");
-        }
-
-        // Set Chrome Profile Preferences
-        Map<String, Object> prefs = new HashMap<String, Object>();
-        prefs.put("credentials_enable_service", false);
-        prefs.put("password_manager_enabled", false);
-        chromeOptions.setExperimentalOption("prefs", prefs);
-
-        return chromeOptions;
+    private ChromeOptions chromeOptions_desktop() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-extensions", "--no-sandbox", "--start-maximized");
+        return options;
     }
 
-    private FirefoxOptions firefoxOptions()
-    {
-        // Setup Firefox Environment
-        FirefoxOptions firefoxOptions = new FirefoxOptions();
-
-        firefoxOptions.addArguments("--window-size=1536,722");
-        firefoxOptions.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-
-
-        return firefoxOptions;
+    private FirefoxOptions firefoxOptions() {
+        FirefoxOptions options = new FirefoxOptions();
+        options.addArguments("--window-size=1536,722");
+        return options;
     }
 
-    private EdgeOptions edgeOptions()
-    {
-        // Setup Edge Environment
-        EdgeOptions edgeOptions = new EdgeOptions();
-        edgeOptions.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-
-        return edgeOptions;
-    }
-
-    public void setBrowser(String browser){
-        BROWSER = browser;
-    }
-
-    public String getBrowser(){
-        return BROWSER;
+    private EdgeOptions edgeOptions() {
+        EdgeOptions options = new EdgeOptions();
+        options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+        return options;
     }
 }
