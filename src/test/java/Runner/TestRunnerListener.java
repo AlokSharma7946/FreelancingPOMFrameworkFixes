@@ -5,8 +5,11 @@ import UtilitiesFactory.EmailReportFactory;
 import UtilitiesFactory.ExtentReportFactory;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.*;
 
 import java.io.File;
@@ -64,12 +67,24 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
     @Override
     public void onTestSuccess(ITestResult iTestResult) {
         try {
+            // Capture the screenshot and get the path
             String screenshotPath = captureScreenshot(iTestResult.getMethod().getMethodName());
-            // Use relative path for screenshot
-            String relativePath = "screenshots/" + iTestResult.getMethod().getMethodName() + ".png";
-            extentReport.testThreadLocal.get().pass("Test Passed: " +
-                    MediaEntityBuilder.createScreenCaptureFromPath(relativePath).build());
-            extentReport.ExtentPassStep();
+
+            // Use absolute path for the screenshot
+            String absolutePath = new File(screenshotPath).getAbsolutePath();
+
+            // Extract the screenshot name
+            String screenshotName = iTestResult.getMethod().getMethodName() + ".png";
+
+            // Debugging: Log the absolute path
+            System.out.println("Screenshot saved to: " + absolutePath);
+
+            // Add the screenshot to the Extent report with the screenshot name
+            extentReport.testThreadLocal.get().pass("Test Passed: " + screenshotName +
+                    MediaEntityBuilder.createScreenCaptureFromPath(absolutePath).build());
+
+            // Logging success step in the Extent report
+            extentReport.ExtentPassStep(iTestResult);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,24 +93,57 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
     @Override
     public void onTestFailure(ITestResult iTestResult) {
         try {
+            // Capture the screenshot and get the path
             String screenshotPath = captureScreenshot(iTestResult.getMethod().getMethodName());
-            // Use relative path for screenshot
-            String relativePath = "screenshots/" + iTestResult.getMethod().getMethodName() + ".png";
-            extentReport.testThreadLocal.get().fail("Test Failed: " + iTestResult.getThrowable().getMessage(),
-                    MediaEntityBuilder.createScreenCaptureFromPath(relativePath).build());
-            extentReport.ExtentFailStep();
+
+            // Use absolute path for the screenshot
+            String absolutePath = new File(screenshotPath).getAbsolutePath();
+
+            // Extract the screenshot name
+            String screenshotName = iTestResult.getMethod().getMethodName() + ".png";
+
+            // Debugging: Log the absolute path
+            System.out.println("Screenshot saved to: " + absolutePath);
+
+            // Add the screenshot to the Extent report with the screenshot name
+            extentReport.testThreadLocal.get().fail("Test Failed: " + iTestResult.getThrowable().getMessage() +
+                            "\nScreenshot: " + screenshotName,
+                    MediaEntityBuilder.createScreenCaptureFromPath(absolutePath).build());
+
+            // Logging failure step in the Extent report
+            extentReport.ExtentFailStep(iTestResult);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+
     private String captureScreenshot(String methodName) throws IOException {
+        // Retrieve the browser name from WebDriver's capabilities
+        String browserName = "Unknown";  // Default if we can't determine the browser
+
+        WebDriver driverInstance = getDriver();  // Get the WebDriver instance
+
+        if (driverInstance instanceof RemoteWebDriver) {
+            // If the driver is a RemoteWebDriver, we can access capabilities
+            Capabilities capabilities = ((RemoteWebDriver) driverInstance).getCapabilities();
+            browserName = capabilities.getBrowserName();
+        }
+
+        // Take screenshot
         TakesScreenshot ts = (TakesScreenshot) getDriver();
         File source = ts.getScreenshotAs(OutputType.FILE);
-        String destination = System.getProperty("user.dir") + "/screenshots/" + methodName + ".png";
+
+        // Construct the destination file path with browser name
+        String destination = System.getProperty("user.dir") + "/screenshots/" + methodName + "_" + browserName + ".png";
+
+        // Copy the screenshot file to the specified destination
         FileUtils.copyFile(source, new File(destination));
+
+        // Return the destination path
         return destination;
     }
+
 
     @Override
     public void onStart(ITestContext iTestContext) {

@@ -9,13 +9,18 @@ import com.aventstack.extentreports.reporter.configuration.Theme;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+import static UtilitiesFactory.BrowserFactory.getDriver;
 import static UtilitiesFactory.EmailReportFactory.failed;
 import static UtilitiesFactory.EmailReportFactory.passed;
 
+import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.AfterClass;
+import org.testng.ITestResult;
 
 public class ExtentReportFactory extends UtilFactory {
     public ExtentReports extent; // Already defined
@@ -51,29 +56,69 @@ public class ExtentReportFactory extends UtilFactory {
     }
 
     // Modify the method to pass a name for the screenshot
-    public void ExtentFailStep() throws IOException {
+    public void ExtentFailStep(ITestResult iTestResult) throws IOException {
         failed++; // Increment failed counter
-        String failureMessage = (failureException != null) ? failureException.replaceAll(",", "<br>") : "No exception message available";
+        String failureMessage = (iTestResult.getThrowable() != null) ? iTestResult.getThrowable().getMessage() : "No exception message available";
 
         if (testThreadLocal.get() != null) {
+            // Capture the screenshot in base64
             String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Failure Screenshot");
-            testThreadLocal.get().fail("Test Failed: " + failureMessage,
+
+            String browserName = "Unknown";  // Default if we can't determine the browser
+
+            WebDriver driverInstance = getDriver();  // Get the WebDriver instance
+
+            if (driverInstance instanceof RemoteWebDriver) {
+                // If the driver is a RemoteWebDriver, we can access capabilities
+                Capabilities capabilities = ((RemoteWebDriver) driverInstance).getCapabilities();
+                browserName = capabilities.getBrowserName();
+            }
+
+            // Get the test method name
+            String methodName = iTestResult.getMethod().getMethodName(); // Using ITestResult to get method name
+
+            // Create a more descriptive screenshot name with browser name and method name
+            String screenshotName = browserName + "_" + methodName + "_Failure_" + System.currentTimeMillis() + ".png";
+
+            // Include the screenshot name in the report
+            testThreadLocal.get().fail("Test Failed: " + failureMessage + "\nScreenshot: " + screenshotName,
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging failure.");
         }
     }
 
-    public void ExtentPassStep() throws IOException {
+    public void ExtentPassStep(ITestResult iTestResult) throws IOException {
         passed++; // Increment passed counter
+
         if (testThreadLocal.get() != null) {
+            // Capture the screenshot in base64
             String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Pass Screenshot");
-            testThreadLocal.get().pass("Test Passed",
+
+            String browserName = "Unknown";  // Default if we can't determine the browser
+
+            WebDriver driverInstance = getDriver();  // Get the WebDriver instance
+
+            if (driverInstance instanceof RemoteWebDriver) {
+                // If the driver is a RemoteWebDriver, we can access capabilities
+                Capabilities capabilities = ((RemoteWebDriver) driverInstance).getCapabilities();
+                browserName = capabilities.getBrowserName();
+            }
+
+            // Get the test method name
+            String methodName = iTestResult.getMethod().getMethodName(); // Using ITestResult to get method name
+
+            // Create a more descriptive screenshot name with browser name and method name
+            String screenshotName = browserName + "_" + methodName + "_Pass_" + System.currentTimeMillis() + ".png";
+
+            // Include the screenshot name in the report
+            testThreadLocal.get().pass("Test Passed\nScreenshot: " + screenshotName,
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging pass.");
         }
     }
+
 
     @AfterMethod
     public void FlushReport() {
