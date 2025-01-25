@@ -4,38 +4,46 @@ import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.*;
+import org.testng.ITestContext;
 
 public class Hooks {
-    private ExtentReports extentReports;
-    private ExtentTest test;
-    private WebDriver driver;
+
+    private static ThreadLocal<ExtentReports> extentReports = new ThreadLocal<>();
+    private static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
+    private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     private final BrowserFactory browserFactoryInstance = BrowserFactory.getInstance();
 
-    @BeforeSuite
+    @BeforeTest
     @Parameters("browser")
-    public void beforeTest(String browser) {
+    public void beforeTest(@Optional("chrome") String browser, ITestContext context) {
         // Set browser type from the XML configuration
         System.out.println("Using browser: " + browser);
-        browserFactoryInstance.setDriver(browser);  // Set the driver based on the browser parameter
-        driver = BrowserFactory.getDriver();  // Get the initialized WebDriver
-        if (driver == null) {
+
+        // Initialize the WebDriver for the specific browser
+        browserFactoryInstance.setDriver(browser);
+        driver.set(BrowserFactory.getDriver());  // Set WebDriver in ThreadLocal
+
+        if (driver.get() == null) {
             System.out.println("Driver is still null after initialization!");
         }
+
+        // Initialize ExtentReports for parallel execution
+        extentReports.set(new ExtentReports());
+        test.set(extentReports.get().createTest(context.getName()));  // Set test-specific ExtentTest in ThreadLocal
+        UtilFactory.setScenarioDef(test.get());  // Initialize scenarioDef here
     }
 
-    @BeforeSuite
-    @Parameters("browser")
-    public void setup(String browser) {
-        // Initialize ExtentReports
-        extentReports = new ExtentReports();
-
-        // Create a new test and assign it to scenarioDef
-        test = extentReports.createTest("Test Name");
-        UtilFactory.setScenarioDef(test);  // Initialize scenarioDef here
+    @AfterTest
+    public void afterTest() {
+        // Clean up WebDriver for the specific thread
+        browserFactoryInstance.cleanUp();  // Clean up the WebDriver after the test is done
     }
 
     @AfterSuite
-    public void cleanUp() {
-        browserFactoryInstance.cleanUp(); // Cleanup the WebDriver after tests
+    public void afterSuite() {
+        // Optionally, flush the ExtentReports after all tests have completed
+        if (extentReports.get() != null) {
+            extentReports.get().flush();
+        }
     }
 }

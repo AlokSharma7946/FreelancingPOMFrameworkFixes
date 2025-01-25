@@ -14,9 +14,7 @@ import java.io.IOException;
 import static UtilitiesFactory.BrowserFactory.getDriver;
 import static UtilitiesFactory.UtilFactory.features;
 
-
-
-public class TestRunnerListener implements ITestListener,IExecutionListener {
+public class TestRunnerListener implements ITestListener, IExecutionListener {
 
     ExtentReportFactory extentReport = new ExtentReportFactory();
     EmailReportFactory emailReport = new EmailReportFactory();
@@ -27,18 +25,14 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
 
     public TestRunnerListener() throws Exception {
         extentReport.ExtentReport();
+        if (this.emailReporting == null) {
+            System.out.println("emailReporting is null, initializing it...");
+            this.emailReporting = "default_value"; // Initialize it if needed
+        }
+        if (features == null) {
+//            features = extentReport.extent.createTest("DefaultTestFeature");  // Default value if features is null
+        }
     }
-
-//    @Override
-//    public void onTestStart(ITestResult iTestResult) {
-//        // Creating child nodes for individual test methods
-//        String methodName = iTestResult.getMethod().getMethodName();
-//        extentReport.test = features.createNode(methodName);
-//        browserFactoryInstance.setBrowser(getParameterValue("browser"));
-//        emailReporting = getParameterValue("emailReport");
-//  //      emailRecipients = getParameterValue("emailRecipients");
-//
-//    }
 
     @Override
     public void onTestStart(ITestResult iTestResult) {
@@ -52,11 +46,12 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
 
         // Create a child node for the method
         String methodName = iTestResult.getMethod().getMethodName();
-        extentReport.test = features.createNode(methodName);
+        extentReport.testThreadLocal.set(features.createNode(methodName));
 
         // Debug logs for verification
         System.out.println("Class node created: " + className);
         System.out.println("Method node created: " + methodName);
+        emailRecipients = getParameterValue("emailRecipients");
     }
 
     private void createClassNode(ITestResult iTestResult) {
@@ -72,7 +67,7 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
             String screenshotPath = captureScreenshot(iTestResult.getMethod().getMethodName());
             // Use relative path for screenshot
             String relativePath = "screenshots/" + iTestResult.getMethod().getMethodName() + ".png";
-            extentReport.test.pass("Test Passed: " +
+            extentReport.testThreadLocal.get().pass("Test Passed: " +
                     MediaEntityBuilder.createScreenCaptureFromPath(relativePath).build());
             extentReport.ExtentPassStep();
         } catch (IOException e) {
@@ -86,7 +81,7 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
             String screenshotPath = captureScreenshot(iTestResult.getMethod().getMethodName());
             // Use relative path for screenshot
             String relativePath = "screenshots/" + iTestResult.getMethod().getMethodName() + ".png";
-            extentReport.test.fail("Test Failed: " + iTestResult.getThrowable().getMessage(),
+            extentReport.testThreadLocal.get().fail("Test Failed: " + iTestResult.getThrowable().getMessage(),
                     MediaEntityBuilder.createScreenCaptureFromPath(relativePath).build());
             extentReport.ExtentFailStep();
         } catch (IOException e) {
@@ -119,20 +114,20 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
     @Override
     public void onFinish(ITestContext iTestContext) {
         extentReport.FlushReport();
-        if(getDriver()!=null){
+        if (getDriver() != null) {
             getDriver().quit();
         }
     }
 
     @Override
     public void onExecutionFinish() {
-        if (emailReporting.equalsIgnoreCase("on"))
-        {
+        if (emailReporting != null && emailReporting.equalsIgnoreCase("on")) {
             emailReport.EmailReporter(emailRecipients);
         }
     }
 
-    public String getParameterValue(String key){
-        return Reporter.getCurrentTestResult().getTestContext().getCurrentXmlTest().getParameter(key);
+    public String getParameterValue(String key) {
+        String value = Reporter.getCurrentTestResult().getTestContext().getCurrentXmlTest().getParameter(key);
+        return value != null ? value : "default";  // Return default if the parameter is not found
     }
 }

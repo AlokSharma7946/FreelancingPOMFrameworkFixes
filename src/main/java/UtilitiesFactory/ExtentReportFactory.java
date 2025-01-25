@@ -12,21 +12,18 @@ import java.lang.reflect.Method;
 import static UtilitiesFactory.EmailReportFactory.failed;
 import static UtilitiesFactory.EmailReportFactory.passed;
 
-
-
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.AfterClass;
 
-
 public class ExtentReportFactory extends UtilFactory {
     public ExtentReports extent; // Already defined
-    public ExtentTest scenarioDef; // Represents class-level nodes
-    public ExtentTest test;
+    public ThreadLocal<ExtentTest> testThreadLocal = new ThreadLocal<>(); // ThreadLocal to handle test-specific objects
     String fileName = reportLocation + "extentreport.html";
     public static int passed = 0;
     public static int failed = 0;
+
     public ExtentReportFactory() throws Exception {
     }
 
@@ -34,79 +31,44 @@ public class ExtentReportFactory extends UtilFactory {
 
     @BeforeMethod
     public void startClassReport(Method method) {
-        test = extent.createTest(method.getDeclaringClass().getSimpleName() + " - " + method.getName());
+        // Set the test for the current thread
+        testThreadLocal.set(extent.createTest(method.getDeclaringClass().getSimpleName() + " - " + method.getName()));
     }
 
     @BeforeClass
     public void ExtentReport() {
-        //First is to create Extent Reports
+        // Initialize ExtentReports
         extent = new ExtentReports();
 
         ExtentHtmlReporter htmlReporter = new ExtentHtmlReporter(fileName);
         htmlReporter.config().setTheme(Theme.DARK);
         htmlReporter.config().setDocumentTitle("Google Automation Test Report");
-        htmlReporter.config().setEncoding("uft-8");
+        htmlReporter.config().setEncoding("utf-8");
         htmlReporter.config().setReportName("Google Automation Execution Report");
         htmlReporter.config().setTimeStampFormat("MMM dd, yyyy HH:mm:ss");
 
         extent.attachReporter(htmlReporter);
-
     }
-
-//    public void ExtentFailStep() throws IOException {
-//        failed++;
-//        scenarioDef.log(Status.FAIL,
-//                "<details>" + "<summary> <b> <font color=red> Cause of Failure: </b> "
-//                        + "</font>" + "</summary>"
-//                        + failureException.replaceAll(",", "<br>") + "</details>", MediaEntityBuilder.createScreenCaptureFromBase64String(
-//                        UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Screenshot")).build());
-//    }
-
-//    public void ExtentFailStep() throws IOException {
-//        failed++;
-//        String failureMessage = (failureException != null) ? failureException.replaceAll(",", "<br>") : "No exception message available";
-//
-//        // Ensure scenarioDef is initialized before logging
-//        if (scenarioDef != null) {
-//            scenarioDef.log(Status.FAIL,
-//                    "<details>" + "<summary> <b> <font color=red> Cause of Failure: </b> "
-//                            + "</font>" + "</summary>"
-//                            + failureMessage + "</details>", MediaEntityBuilder.createScreenCaptureFromBase64String(
-//                            UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Screenshot")).build());
-//        } else {
-//            System.out.println("scenarioDef is not initialized");
-//        }
-//    }
 
     // Modify the method to pass a name for the screenshot
     public void ExtentFailStep() throws IOException {
         failed++; // Increment failed counter
         String failureMessage = (failureException != null) ? failureException.replaceAll(",", "<br>") : "No exception message available";
 
-        if (test != null) {
+        if (testThreadLocal.get() != null) {
             String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Failure Screenshot");
-            test.fail("Test Failed: " + failureMessage,
+            testThreadLocal.get().fail("Test Failed: " + failureMessage,
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging failure.");
         }
     }
 
-
-//    public void ExtentPassStep() throws IOException {
-//        passed++;
-//        scenarioDef.log(Status.PASS,
-//                "<summary> <b> <font color=green> Test Passed: </b> "
-//                        + "</font>" + "</summary>"
-//                , MediaEntityBuilder.createScreenCaptureFromBase64String(
-//                        UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Screenshot")).build());
-//    }
-
     public void ExtentPassStep() throws IOException {
         passed++; // Increment passed counter
-        if (test != null) {
+        if (testThreadLocal.get() != null) {
             String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Pass Screenshot");
-            test.pass("Test Passed",
+            testThreadLocal.get().pass("Test Passed",
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging pass.");
@@ -114,7 +76,7 @@ public class ExtentReportFactory extends UtilFactory {
     }
 
     @AfterMethod
-    public void FlushReport(){
+    public void FlushReport() {
         extent.flush();
     }
 

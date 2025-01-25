@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Parallel Suite" parallel="tests" thread-count="2" verbose="10" configfailurepolicy="skip">
+
+    <!-- Define Chrome Test -->
+    <test name="Chrome Test">
+        <parameter name="browser" value="CHROME"/>
+        <classes>
+            <class name="UtilitiesFactory.Hooks"/>
+            <class name="Runner.HomePageTests" />
+            <class name="Runner.HomeTests" />
+        </classes>
+    </test>
+
+    <!-- Define Edge Test -->
+    <test name="Edge Test">
+        <parameter name="browser" value="EDGE"/>
+        <classes>
+            <class name="UtilitiesFactory.Hooks"/>
+            <class name="Runner.HomePageTests" />
+            <class name="Runner.HomeTests" />
+        </classes>
+    </test>
+
+</suite>
