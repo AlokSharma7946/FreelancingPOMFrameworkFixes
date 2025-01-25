@@ -42,19 +42,22 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
 
     @Override
     public void onTestStart(ITestResult iTestResult) {
-        // Get the class name of the test method
-        String className = iTestResult.getTestClass().getName();
+        // Extract the simple class name
+        String className = iTestResult.getTestClass().getRealClass().getSimpleName();
 
-        // Check if the class node already exists, if not, create it
+        // Check if the class node already exists or if it's for a new class
         if (features == null || !features.getModel().getName().equals(className)) {
-            features = extentReport.extent.createTest(className);  // Create a new test for the class
+            features = extentReport.extent.createTest(className); // Create class node
         }
 
-        // Create the method node under the class node
+        // Create a child node for the method
         String methodName = iTestResult.getMethod().getMethodName();
-        extentReport.test = features.createNode(methodName);  // Method under the class node
-    }
+        extentReport.test = features.createNode(methodName);
 
+        // Debug logs for verification
+        System.out.println("Class node created: " + className);
+        System.out.println("Method node created: " + methodName);
+    }
     private void createClassNode(ITestResult iTestResult) {
         if (features == null) {
             String className = iTestResult.getTestClass().getName();
@@ -64,27 +67,28 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
 
     @Override
     public void onTestSuccess(ITestResult iTestResult) {
-        try{
+        try {
             String screenshotPath = captureScreenshot(iTestResult.getMethod().getMethodName());
+            // Use relative path for screenshot
+            String relativePath = "screenshots/" + iTestResult.getMethod().getMethodName() + ".png";
             extentReport.test.pass("Test Passed: " +
-                    MediaEntityBuilder.createScreenCaptureFromPath(screenshotPath).build());
+                    MediaEntityBuilder.createScreenCaptureFromPath(relativePath).build());
             extentReport.ExtentPassStep();
-//            getDriver().close();
-//            getDriver().quit();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Override
     public void onTestFailure(ITestResult iTestResult) {
-        try{
+        try {
             String screenshotPath = captureScreenshot(iTestResult.getMethod().getMethodName());
+            // Use relative path for screenshot
+            String relativePath = "screenshots/" + iTestResult.getMethod().getMethodName() + ".png";
             extentReport.test.fail("Test Failed: " + iTestResult.getThrowable().getMessage(),
-                    MediaEntityBuilder.createScreenCaptureFromPath(screenshotPath).build());
-            getDriver().close();
+                    MediaEntityBuilder.createScreenCaptureFromPath(relativePath).build());
             extentReport.ExtentFailStep();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -99,11 +103,16 @@ public class TestRunnerListener implements ITestListener,IExecutionListener {
 
     @Override
     public void onStart(ITestContext iTestContext) {
-     //   scenarioDef = extentReport.extent.createTest(iTestContext.getName());
-//        features = extentReport.extent.createTest("Google Search");
-        // Creating a parent node in the Extent Report based on the test class name
+        // Extract the simple class name from the context
         String className = iTestContext.getAllTestMethods()[0].getRealClass().getSimpleName();
-        features = extentReport.extent.createTest(className);
+
+        // Create a class node if not already created
+        if (features == null || !features.getModel().getName().equals(className)) {
+            features = extentReport.extent.createTest(className);
+        }
+
+        // Debug log
+        System.out.println("Class node initialized in onStart: " + className);
     }
 
     @Override

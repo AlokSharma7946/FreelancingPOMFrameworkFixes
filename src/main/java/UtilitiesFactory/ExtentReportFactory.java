@@ -16,7 +16,8 @@ import static UtilitiesFactory.EmailReportFactory.passed;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.AfterMethod;
-
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterClass;
 
 
 public class ExtentReportFactory extends UtilFactory {
@@ -24,6 +25,8 @@ public class ExtentReportFactory extends UtilFactory {
     public ExtentTest scenarioDef; // Represents class-level nodes
     public ExtentTest test;
     String fileName = reportLocation + "extentreport.html";
+    public static int passed = 0;
+    public static int failed = 0;
     public ExtentReportFactory() throws Exception {
     }
 
@@ -31,10 +34,10 @@ public class ExtentReportFactory extends UtilFactory {
 
     @BeforeMethod
     public void startClassReport(Method method) {
-        classLevelTest = extent.createTest(method.getDeclaringClass().getSimpleName()); // This will create a node for the class
+        test = extent.createTest(method.getDeclaringClass().getSimpleName() + " - " + method.getName());
     }
 
-    @BeforeMethod
+    @BeforeClass
     public void ExtentReport() {
         //First is to create Extent Reports
         extent = new ExtentReports();
@@ -77,15 +80,12 @@ public class ExtentReportFactory extends UtilFactory {
 
     // Modify the method to pass a name for the screenshot
     public void ExtentFailStep() throws IOException {
-        failed++;
-
+        failed++; // Increment failed counter
         String failureMessage = (failureException != null) ? failureException.replaceAll(",", "<br>") : "No exception message available";
 
-        // Ensure test node is initialized
-        if (classLevelTest != null) {
-            // Use Base64 encoded screenshot and provide a name for the screenshot
-            String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(),"Failure Screenshot");
-            classLevelTest.fail("Test Failed: " + failureMessage,
+        if (test != null) {
+            String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Failure Screenshot");
+            test.fail("Test Failed: " + failureMessage,
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging failure.");
@@ -103,15 +103,10 @@ public class ExtentReportFactory extends UtilFactory {
 //    }
 
     public void ExtentPassStep() throws IOException {
-        passed++;
-
-        // Ensure the test node is initialized for logging
-        if (classLevelTest != null) {
-            // Get the Base64 screenshot string
+        passed++; // Increment passed counter
+        if (test != null) {
             String base64Screenshot = UtilFactory.getBase64Screenshot(BrowserFactory.getDriver(), "Pass Screenshot");
-
-            // Log the success with the screenshot attached
-            classLevelTest.pass("Test Passed",
+            test.pass("Test Passed",
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging pass.");
@@ -121,5 +116,14 @@ public class ExtentReportFactory extends UtilFactory {
     @AfterMethod
     public void FlushReport(){
         extent.flush();
+    }
+
+    @AfterClass
+    public void afterClass() {
+        // Optionally, flush after all tests in the class are done
+        extent.flush();
+        // Log final passed and failed count if needed
+        System.out.println("Passed: " + passed);
+        System.out.println("Failed: " + failed);
     }
 }
