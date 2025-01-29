@@ -34,6 +34,7 @@ public class UtilFactory {
     private static String screenshotFolder;
     public static String reportLocation;
 
+
     static {
         try {
             screenshotFolder = new PropertyLoaderFactory().getPropertyFile(envPropFile).getProperty("screenshot.folder");
@@ -60,6 +61,7 @@ public class UtilFactory {
 
     protected void loadUrl(String url){
         try{
+            scenarioDef = ExtentReportFactory.testThreadLocal.get();
             BrowserFactory.getDriver().manage().deleteAllCookies();
             BrowserFactory.getDriver().get(url);
             waitForPageLoad();

@@ -24,7 +24,7 @@ import org.testng.ITestResult;
 
 public class ExtentReportFactory extends UtilFactory {
     public ExtentReports extent; // Already defined
-    public ThreadLocal<ExtentTest> testThreadLocal = new ThreadLocal<>(); // ThreadLocal to handle test-specific objects
+    public static ThreadLocal<ExtentTest> testThreadLocal = new ThreadLocal<>(); // ThreadLocal to handle test-specific objects
     String fileName = reportLocation + "extentreport.html";
     public static int passed = 0;
     public static int failed = 0;
