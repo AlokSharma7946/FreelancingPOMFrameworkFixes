@@ -73,6 +73,7 @@
                     <version>3.5.2</version>
                     <configuration>
                         <testFailureIgnore>true</testFailureIgnore>
+                        <suiteXmlFiles>${filename}</suiteXmlFiles>
                     </configuration>
                 </plugin>
                 <plugin>

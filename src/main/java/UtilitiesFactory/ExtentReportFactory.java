@@ -34,12 +34,6 @@ public class ExtentReportFactory extends UtilFactory {
 
     public ExtentTest classLevelTest;
 
-    @BeforeMethod
-    public void startClassReport(Method method) {
-        // Set the test for the current thread
-        testThreadLocal.set(extent.createTest(method.getDeclaringClass().getSimpleName() + " - " + method.getName()));
-    }
-
     @BeforeClass
     public void ExtentReport() {
         // Initialize ExtentReports
