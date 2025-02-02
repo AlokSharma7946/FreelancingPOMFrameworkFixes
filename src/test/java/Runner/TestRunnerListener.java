@@ -3,6 +3,7 @@ package Runner;
 import UtilitiesFactory.BrowserFactory;
 import UtilitiesFactory.EmailReportFactory;
 import UtilitiesFactory.ExtentReportFactory;
+import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.Capabilities;
@@ -14,8 +15,12 @@ import org.testng.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import com.aventstack.extentreports.ExtentTest;
+
 import static UtilitiesFactory.BrowserFactory.getDriver;
-import static UtilitiesFactory.UtilFactory.features;
+//import static UtilitiesFactory.UtilFactory.features;
 
 public class TestRunnerListener implements ITestListener, IExecutionListener {
 
@@ -23,6 +28,8 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
     EmailReportFactory emailReport = new EmailReportFactory();
     String emailReporting;
     String emailRecipients;
+//    private static ThreadLocal<com.aventstack.extentreports.ExtentTest> featuresThreadLocal = new ThreadLocal<>();
+
 
     private final BrowserFactory browserFactoryInstance = BrowserFactory.getInstance();
 
@@ -32,37 +39,62 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
             System.out.println("emailReporting is null, initializing it...");
             this.emailReporting = "default_value"; // Initialize it if needed
         }
-        if (features == null) {
+        if (featuresThreadLocal == null) {
 //            features = extentReport.extent.createTest("DefaultTestFeature");  // Default value if features is null
         }
     }
 
+
+
+    private static ThreadLocal<Map<String, com.aventstack.extentreports.ExtentTest>> featuresThreadLocal = ThreadLocal.withInitial(ConcurrentHashMap::new);
+
     @Override
     public void onTestStart(ITestResult iTestResult) {
-        // Extract the simple class name
         String className = iTestResult.getTestClass().getRealClass().getSimpleName();
+        String methodName = iTestResult.getMethod().getMethodName();
+        String browserName = getBrowserName(); // Get the browser name
 
-        // Check if the class node already exists or if it's for a new class
-        if (features == null || !features.getModel().getName().equals(className)) {
-            features = extentReport.extent.createTest(className); // Create class node
+        // Unique key for each class-browser combination
+        String classBrowserKey = className + " - " + browserName;
+
+        // Get the thread-local map and ensure class node is created
+        Map<String, ExtentTest> classNodeMap = featuresThreadLocal.get();
+
+        if (!classNodeMap.containsKey(classBrowserKey)) {
+            classNodeMap.put(classBrowserKey, extentReport.extent.createTest(classBrowserKey));
         }
 
-        // Create a child node for the method
-        String methodName = iTestResult.getMethod().getMethodName();
-        extentReport.testThreadLocal.set(features.createNode(methodName));
+        // Set the child node for the test method
+        extentReport.testThreadLocal.set(classNodeMap.get(classBrowserKey).createNode(methodName));
 
-        // Debug logs for verification
-        System.out.println("Class node created: " + className);
+        System.out.println("Class node created: " + classBrowserKey);
         System.out.println("Method node created: " + methodName);
-        emailRecipients = getParameterValue("emailRecipients");
     }
+
+
+
+    private String getBrowserName() {
+        String browserName = "Unknown"; // Default value
+        WebDriver driverInstance = getDriver(); // Get the WebDriver instance
+
+        if (driverInstance instanceof RemoteWebDriver) {
+            Capabilities capabilities = ((RemoteWebDriver) driverInstance).getCapabilities();
+            browserName = capabilities.getBrowserName();
+        }
+
+        return browserName;
+    }
+
+
 
     private void createClassNode(ITestResult iTestResult) {
-        if (features == null) {
-            String className = iTestResult.getTestClass().getName();
-            features = extentReport.extent.createTest(className);
+        if (featuresThreadLocal.get() == null) {
+            String className = iTestResult.getTestClass().getRealClass().getSimpleName();
+            featuresThreadLocal.set((Map<String, ExtentTest>) extentReport.extent.createTest(className));
         }
     }
+
+
 
     @Override
     public void onTestSuccess(ITestResult iTestResult) {
