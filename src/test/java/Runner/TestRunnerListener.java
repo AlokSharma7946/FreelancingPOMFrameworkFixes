@@ -145,19 +145,19 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
     }
 
 
-    @Override
-    public void onStart(ITestContext iTestContext) {
-        // Extract the simple class name from the context
-        String className = iTestContext.getAllTestMethods()[0].getRealClass().getSimpleName();
-
-        // Create a class node if not already created
-        if (features == null || !features.getModel().getName().equals(className)) {
-            features = extentReport.extent.createTest(className);
-        }
-
-        // Debug log
-        System.out.println("Class node initialized in onStart: " + className);
-    }
+//    @Override
+//    public void onStart(ITestContext iTestContext) {
+//        // Extract the simple class name from the context
+//        String className = iTestContext.getAllTestMethods()[0].getRealClass().getSimpleName();
+//
+//        // Create a class node if not already created
+//        if (features == null || !features.getModel().getName().equals(className)) {
+//            features = extentReport.extent.createTest(className);
+//        }
+//
+//        // Debug log
+//        System.out.println("Class node initialized in onStart: " + className);
+//    }
 
     @Override
     public void onFinish(ITestContext iTestContext) {

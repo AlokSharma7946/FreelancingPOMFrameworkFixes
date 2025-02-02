@@ -48,12 +48,16 @@ public class UtilFactory {
 
     public ExtentReports extent;
 
-    public static ExtentTest scenarioDef;
+    public static ThreadLocal<ExtentTest> scenarioDef = new ThreadLocal<>();
     public static ExtentTest features;
-    public static String failureException;
+    public static ThreadLocal<String> failureException = new ThreadLocal<>();
 
     public static void setScenarioDef(ExtentTest test) {
-        scenarioDef = test;
+        scenarioDef.set(test);
+    }
+
+    public static ExtentTest getScenarioDef() {
+        return scenarioDef.get();
     }
 
     public UtilFactory() throws Exception {
@@ -61,13 +65,13 @@ public class UtilFactory {
 
     protected void loadUrl(String url){
         try{
-            scenarioDef = ExtentReportFactory.testThreadLocal.get();
+            scenarioDef.set(ExtentReportFactory.testThreadLocal.get());
             BrowserFactory.getDriver().manage().deleteAllCookies();
             BrowserFactory.getDriver().get(url);
             waitForPageLoad();
-            scenarioDef.log(Status.PASS,"Navigated to URL: "+url);
+            scenarioDef.get().log(Status.PASS, "Navigated to URL: " + url);
         }catch (Exception e){
-           scenarioDef.log(Status.FAIL,"Could not initiate the browser session or navigate to URL "+url);
+           scenarioDef.get().log(Status.FAIL,"Could not initiate the browser session or navigate to URL "+url);
             throw e;
         }
     }
@@ -75,9 +79,9 @@ public class UtilFactory {
         try{
             BrowserFactory.getDriver().get(url);
             waitForPageLoad();
-            scenarioDef.log(Status.PASS,"Opened URL: " + url);
+            scenarioDef.get().log(Status.PASS,"Opened URL: " + url);
         }catch (Exception e){
-            scenarioDef.log(Status.FAIL,"Could not open URL: "+url);
+            scenarioDef.get().log(Status.FAIL,"Could not open URL: "+url);
             throw e;
         }
     }
@@ -89,17 +93,17 @@ public class UtilFactory {
             String actualURL=BrowserFactory.getDriver().getCurrentUrl();
 
             if (actualURL.contains(expectedUrl)){
-                scenarioDef.log(Status.PASS,"Validated Url as Expected Url: "+expectedUrl);
+                scenarioDef.get().log(Status.PASS,"Validated Url as Expected Url: "+expectedUrl);
             }else {
                 errorMsg = "Could not Validate Url as Expected Url: "+expectedUrl+" , Actual Url: "+actualURL;
                 throw new NoSuchContextException("Actual and Expected Url Differs");
             }
         }catch (Exception e){
-            failureException = e.toString();
+            failureException.set(e.toString());
             if (errorMsg == null){
-                scenarioDef.log(Status.FAIL,"Unable to Load the Url");
+                scenarioDef.get().log(Status.FAIL,"Unable to Load the Url");
             }else {
-                scenarioDef.log(Status.FAIL,errorMsg);
+                scenarioDef.get().log(Status.FAIL,errorMsg);
             }
             throw e;
         }
@@ -334,10 +338,10 @@ public class UtilFactory {
             ((WebStorage)driver).getSessionStorage().clear();
             ((WebStorage)driver).getLocalStorage().clear();
             customWait(3000);
-            scenarioDef.log(Status.PASS,"Successfully Clear Browser Session");
+            scenarioDef.get().log(Status.PASS,"Successfully Clear Browser Session");
         }catch (Exception e){
-            failureException = e.toString();
-            scenarioDef.log(Status.FAIL,"Unable to Clear Browser Session");
+            failureException.set(e.toString());
+            scenarioDef.get().log(Status.FAIL,"Unable to Clear Browser Session");
             throw e;
         }
     }
@@ -347,10 +351,10 @@ public class UtilFactory {
             BrowserFactory.getDriver().navigate().refresh();
             waitForPageLoad();
             customWait(3000);
-            scenarioDef.log(Status.PASS,"Successfully Refresh Browser Page");
+            scenarioDef.get().log(Status.PASS,"Successfully Refresh Browser Page");
         }catch (Exception e){
-            failureException = e.toString();
-            scenarioDef.log(Status.FAIL,"Unable to Refresh Browser Page");
+            failureException.set(e.toString());
+            scenarioDef.get().log(Status.FAIL,"Unable to Refresh Browser Page");
             throw e;
         }
     }
@@ -360,10 +364,10 @@ public class UtilFactory {
             BrowserFactory.getDriver().navigate().back();
             waitForPageLoad();
             customWait(3000);
-            scenarioDef.log(Status.PASS,"Successfully Navigate to Back Page");
+            scenarioDef.get().log(Status.PASS,"Successfully Navigate to Back Page");
         }catch (Exception e){
-            failureException = e.toString();
-            scenarioDef.log(Status.FAIL,"Unable to Navigate to Back Page");
+            failureException.set(e.toString());
+            scenarioDef.get().log(Status.FAIL,"Unable to Navigate to Back Page");
             throw e;
         }
     }

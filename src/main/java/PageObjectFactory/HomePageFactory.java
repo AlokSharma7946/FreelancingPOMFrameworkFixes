@@ -18,7 +18,7 @@ public class HomePageFactory extends UtilFactory {
             waitFactory.waitForElementToBeClickable(locator, BrowserFactory.getDriver());
             click(locator);
         } catch (Exception e) {
-            failureException = e.toString();
+            failureException.set(e.toString());
             throw e;
         }
     }
@@ -29,7 +29,7 @@ public class HomePageFactory extends UtilFactory {
             waitFactory.waitForElementToBeClickable(locator,BrowserFactory.getDriver());
             enterString(locator, textToEnter);
         } catch (Exception e) {
-            failureException = e.toString();
+            failureException.set(e.toString());
             throw e;
         }
     }
