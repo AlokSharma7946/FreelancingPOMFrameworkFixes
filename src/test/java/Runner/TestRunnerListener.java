@@ -144,6 +144,7 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
 
             // Logging failure step in the Extent report
             extentReport.ExtentFailStep(iTestResult);
+            getDriver().quit();
         } catch (IOException e) {
             e.printStackTrace();
         }

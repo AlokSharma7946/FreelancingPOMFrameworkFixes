@@ -8,6 +8,7 @@
     <!-- Define Chrome Test -->
     <test name="Chrome Test">
         <parameter name="browser" value="CHROME"/>
+        <parameter name="headless" value="false"/>  <!-- Change to false for UI mode -->
         <classes>
             <class name="UtilitiesFactory.Hooks"/>
             <class name="Runner.HomePageTests" />
@@ -18,6 +19,7 @@
     <!-- Define Edge Test -->
     <test name="Edge Test">
         <parameter name="browser" value="EDGE"/>
+        <parameter name="headless" value="true"/>  <!-- Change to false for UI mode -->
         <classes>
             <class name="UtilitiesFactory.Hooks"/>
             <class name="Runner.HomePageTests" />

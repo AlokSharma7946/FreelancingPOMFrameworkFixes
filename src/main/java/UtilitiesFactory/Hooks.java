@@ -14,13 +14,16 @@ public class Hooks {
     private final BrowserFactory browserFactoryInstance = BrowserFactory.getInstance();
 
     @BeforeTest
-    @Parameters("browser")
-    public void beforeTest(@Optional("chrome") String browser, ITestContext context) {
-        // Set browser type from the XML configuration
-        System.out.println("Using browser: " + browser);
+    @Parameters({"browser", "headless"})
+    public void beforeTest(@Optional("chrome") String browser, @Optional("false") String headless, ITestContext context) {
+        // Convert headless parameter to boolean
+        boolean isHeadless = Boolean.parseBoolean(headless);
 
-        // Initialize the WebDriver for the specific browser
-        browserFactoryInstance.setDriver(browser);
+        // Log browser and headless mode
+        System.out.println("Using browser: " + browser + " | Headless: " + isHeadless);
+
+        // Initialize WebDriver for the specific browser with headless mode
+        browserFactoryInstance.setDriver(browser, isHeadless);
         driver.set(BrowserFactory.getDriver());  // Set WebDriver in ThreadLocal
 
         if (driver.get() == null) {
