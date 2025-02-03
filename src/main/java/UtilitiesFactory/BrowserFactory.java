@@ -105,7 +105,7 @@
 
         private ChromeOptions chromeOptions_desktop() {
             ChromeOptions options = new ChromeOptions();
-            options.addArguments("--disable-extensions", "--no-sandbox", "--start-maximized");
+            options.addArguments("--disable-extensions", "--no-sandbox", "--start-maximized", "--headless");
             return options;
         }
 
@@ -118,6 +118,7 @@
         private EdgeOptions edgeOptions() {
             EdgeOptions options = new EdgeOptions();
             options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+            options.addArguments("--headless");
             return options;
         }
 
