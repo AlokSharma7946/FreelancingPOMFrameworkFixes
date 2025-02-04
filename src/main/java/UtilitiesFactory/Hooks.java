@@ -48,5 +48,8 @@ public class Hooks {
         if (extentReports.get() != null) {
             extentReports.get().flush();
         }
+        if (driver != null) {
+            driver.get().quit();
+        }
     }
 }
