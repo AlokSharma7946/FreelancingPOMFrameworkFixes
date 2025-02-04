@@ -6,6 +6,8 @@ import org.openqa.selenium.WebDriver;
 import org.testng.annotations.*;
 import org.testng.ITestContext;
 
+import java.lang.reflect.Method;
+
 public class Hooks {
 
     private static ThreadLocal<ExtentReports> extentReports = new ThreadLocal<>();
@@ -31,15 +33,30 @@ public class Hooks {
         }
 
         // Initialize ExtentReports for parallel execution
-        extentReports.set(new ExtentReports());
+        if (extentReports.get() == null) {
+            extentReports.set(new ExtentReports());
+        }
+        // Create a test-specific report
         test.set(extentReports.get().createTest(context.getName()));  // Set test-specific ExtentTest in ThreadLocal
+
+        // Initialize scenarioDef in UtilFactory for logging
         UtilFactory.setScenarioDef(test.get());  // Initialize scenarioDef here
+    }
+
+    @BeforeMethod
+    public void beforeMethod(Method method) throws Exception {
+        // This ensures that the scenarioDef is initialized properly before each test method
+        test.set(extentReports.get().createTest(method.getName()));
+        UtilFactory.setScenarioDef(test.get()); // Ensure scenarioDef is reset for each method
     }
 
     @AfterTest
     public void afterTest() {
         // Clean up WebDriver for the specific thread
-        browserFactoryInstance.cleanUp();  // Clean up the WebDriver after the test is done
+        if (driver.get() != null) {
+            browserFactoryInstance.cleanUp();  // Clean up the WebDriver after the test is done
+            driver.remove(); // Ensure thread-local WebDriver is cleaned up
+        }
     }
 
     @AfterSuite
@@ -48,8 +65,11 @@ public class Hooks {
         if (extentReports.get() != null) {
             extentReports.get().flush();
         }
-        if (driver != null) {
+
+        // Close the driver and clean up resources at the end of the suite
+        if (driver.get() != null) {
             driver.get().quit();
+            driver.remove(); // Ensure thread-local WebDriver is cleaned up
         }
     }
 }

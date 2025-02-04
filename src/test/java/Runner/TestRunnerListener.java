@@ -3,6 +3,7 @@ package Runner;
 import UtilitiesFactory.BrowserFactory;
 import UtilitiesFactory.EmailReportFactory;
 import UtilitiesFactory.ExtentReportFactory;
+import UtilitiesFactory.UtilFactory;
 import com.aventstack.extentreports.ExtentTest;
 import org.openqa.selenium.WebDriver;
 import org.testng.*;
@@ -39,8 +40,12 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
             classNodeMap.put(classBrowserKey, extentReport.extent.createTest(classBrowserKey));
         }
 
-        extentReport.testThreadLocal.set(classNodeMap.get(classBrowserKey).createNode(methodName));
+        // Create a node for the method and set it in the thread-local for the current test
+        ExtentTest methodTest = classNodeMap.get(classBrowserKey).createNode(methodName);
+        extentReport.testThreadLocal.set(methodTest);  // Ensure that the thread-local test object is set
+        UtilFactory.setScenarioDef(methodTest);  // Set the scenarioDef in UtilFactory so that logging works correctly
     }
+
 
     @Override
     public void onTestSuccess(ITestResult iTestResult) {
@@ -55,11 +60,13 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
     public void onTestFailure(ITestResult iTestResult) {
         try {
             extentReport.ExtentFailStep(iTestResult);
+            extentReport.FlushReport();  // Ensure that the report is flushed before quitting
             getDriver().quit();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     private String getBrowserName() {
         String browserName = "Unknown";
