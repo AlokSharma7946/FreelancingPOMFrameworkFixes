@@ -49,7 +49,6 @@ public class ExtentReportFactory extends UtilFactory {
         extent.attachReporter(htmlReporter);
     }
 
-    // Modify the method to pass a name for the screenshot
     public void ExtentFailStep(ITestResult iTestResult) throws IOException {
         failed++; // Increment failed counter
         String failureMessage = (iTestResult.getThrowable() != null) ? iTestResult.getThrowable().getMessage() : "No exception message available";
@@ -74,13 +73,14 @@ public class ExtentReportFactory extends UtilFactory {
             // Create a more descriptive screenshot name with browser name and method name
             String screenshotName = browserName + "_" + methodName + "_Failure_" + System.currentTimeMillis() + ".png";
 
-            // Include the screenshot name in the report
-            testThreadLocal.get().fail("Test Failed: " + failureMessage + "\nScreenshot: " + screenshotName,
+            // Only include the screenshot itself in the report (without the base64 string)
+            testThreadLocal.get().fail("Test Failed: " + failureMessage,
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging failure.");
         }
     }
+
 
     public void ExtentPassStep(ITestResult iTestResult) throws IOException {
         passed++; // Increment passed counter
@@ -105,8 +105,8 @@ public class ExtentReportFactory extends UtilFactory {
             // Create a more descriptive screenshot name with browser name and method name
             String screenshotName = browserName + "_" + methodName + "_Pass_" + System.currentTimeMillis() + ".png";
 
-            // Include the screenshot name in the report
-            testThreadLocal.get().pass("Test Passed\nScreenshot: " + screenshotName,
+            // Only include the screenshot itself in the report (without the base64 string)
+            testThreadLocal.get().pass("Test Passed",
                     MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
         } else {
             System.out.println("Test node is not initialized for logging pass.");

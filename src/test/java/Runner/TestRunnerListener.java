@@ -105,17 +105,10 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
             // Use absolute path for the screenshot
             String absolutePath = new File(screenshotPath).getAbsolutePath();
 
-            // Extract the screenshot name
-            String screenshotName = iTestResult.getMethod().getMethodName() + ".png";
-
-            // Debugging: Log the absolute path
+            // Log the absolute path for debugging
             System.out.println("Screenshot saved to: " + absolutePath);
 
-            // Add the screenshot to the Extent report with the screenshot name
-            extentReport.testThreadLocal.get().pass("Test Passed: " + screenshotName +
-                    MediaEntityBuilder.createScreenCaptureFromPath(absolutePath).build());
-
-            // Logging success step in the Extent report
+            // Only log the result and screenshot in ExtentReportFactory
             extentReport.ExtentPassStep(iTestResult);
         } catch (IOException e) {
             e.printStackTrace();
@@ -131,18 +124,10 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
             // Use absolute path for the screenshot
             String absolutePath = new File(screenshotPath).getAbsolutePath();
 
-            // Extract the screenshot name
-            String screenshotName = iTestResult.getMethod().getMethodName() + ".png";
-
-            // Debugging: Log the absolute path
+            // Log the absolute path for debugging
             System.out.println("Screenshot saved to: " + absolutePath);
 
-            // Add the screenshot to the Extent report with the screenshot name
-            extentReport.testThreadLocal.get().fail("Test Failed: " + iTestResult.getThrowable().getMessage() +
-                            "\nScreenshot: " + screenshotName,
-                    MediaEntityBuilder.createScreenCaptureFromPath(absolutePath).build());
-
-            // Logging failure step in the Extent report
+            // Only log the result and screenshot in ExtentReportFactory
             extentReport.ExtentFailStep(iTestResult);
             getDriver().quit();
         } catch (IOException e) {
@@ -152,30 +137,21 @@ public class TestRunnerListener implements ITestListener, IExecutionListener {
 
 
     private String captureScreenshot(String methodName) throws IOException {
-        // Retrieve the browser name from WebDriver's capabilities
-        String browserName = "Unknown";  // Default if we can't determine the browser
-
-        WebDriver driverInstance = getDriver();  // Get the WebDriver instance
-
-        if (driverInstance instanceof RemoteWebDriver) {
-            // If the driver is a RemoteWebDriver, we can access capabilities
-            Capabilities capabilities = ((RemoteWebDriver) driverInstance).getCapabilities();
-            browserName = capabilities.getBrowserName();
-        }
-
         // Take screenshot
         TakesScreenshot ts = (TakesScreenshot) getDriver();
         File source = ts.getScreenshotAs(OutputType.FILE);
 
-        // Construct the destination file path with browser name
-        String destination = System.getProperty("user.dir") + "/screenshots/" + methodName + "_" + browserName + ".png";
+        // Construct the destination file path
+        String destination = System.getProperty("user.dir") + "/screenshots/" + methodName + "_" + System.currentTimeMillis() + ".png";
 
-        // Copy the screenshot file to the specified destination
+        // Copy the screenshot to the destination
         FileUtils.copyFile(source, new File(destination));
 
-        // Return the destination path
+        // Return the file path
         return destination;
     }
+
+
 
 
 //    @Override
