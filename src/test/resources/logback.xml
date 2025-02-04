@@ -1,0 +1,17 @@
+<configuration>
+    <!-- Appender for console output -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Suppress logs from java.net and io.netty -->
+    <logger name="java.net" level="OFF" />
+    <logger name="io.netty" level="OFF" />
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
