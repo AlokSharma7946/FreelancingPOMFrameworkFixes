@@ -61,6 +61,7 @@
         }
 
         public UtilFactory() throws Exception {
+            scenarioDef.set(ExtentReportFactory.testThreadLocal.get());
         }
 
         protected void loadUrl(String url){

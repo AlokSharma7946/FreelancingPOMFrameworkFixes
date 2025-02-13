@@ -17,7 +17,7 @@ public class HomePageFactory extends UtilFactory {
     public void clickOnSearchIcon() throws Exception {
         String locator = HomePageEnum.XPATH_SEARCH_ICON.getValue();
         try {
-            scenarioDef.set(ExtentReportFactory.testThreadLocal.get());
+//            scenarioDef.set(ExtentReportFactory.testThreadLocal.get());
             waitFactory.waitForElementToBeClickable(locator, BrowserFactory.getDriver());
             click(locator);
             scenarioDef.get().log(Status.PASS, "clickSearchIcon PASS");
@@ -31,7 +31,7 @@ public class HomePageFactory extends UtilFactory {
     public void enterQuery(String textToEnter) throws Exception {
         String locator = HomePageEnum.XPATH_SEARCH_ICON.getValue();
         try {
-            scenarioDef.set(ExtentReportFactory.testThreadLocal.get());
+//            scenarioDef.set(ExtentReportFactory.testThreadLocal.get());
             waitFactory.waitForElementToBeClickable(locator,BrowserFactory.getDriver());
             enterString(locator, textToEnter);
             scenarioDef.get().log(Status.PASS, "ENTER QUERY PASS");
