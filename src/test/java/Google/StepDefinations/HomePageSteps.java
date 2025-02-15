@@ -13,8 +13,8 @@ public class HomePageSteps extends HarnessVariables {
     }
 
     public void userNavigateToUrl(String urlToLoad) throws Exception {
-        url = new PropertyLoaderFactory().getPropertyFile(runPropFile).getProperty(urlToLoad);
-        loadUrl(url);
+//        url = new PropertyLoaderFactory().getPropertyFile(runPropFile).getProperty(urlToLoad);
+        loadUrl(urlToLoad);
     }
     public void userClicksOnSearchIcon()  throws Exception {
         homePage.clickOnSearchIcon();

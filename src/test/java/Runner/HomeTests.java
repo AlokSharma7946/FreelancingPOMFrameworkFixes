@@ -1,6 +1,7 @@
 package Runner;
 
 import Google.StepDefinations.HomePageSteps;
+import UtilitiesFactory.ExcelFactory;
 import UtilitiesFactory.Hooks;
 import org.testng.annotations.Test;
 
@@ -13,7 +14,8 @@ public class HomeTests extends Hooks {
 
     @Test(priority = 1)
     public void userIsSearchingForSomething() throws Exception {
-        HPS.userNavigateToUrl("google.home");
+        String url = ExcelFactory.getValue("HomePageData", "URL");
+        HPS.userNavigateToUrl(url);
         HPS.userClicksOnSearchIcon();
     }
     @Test(priority = 2)
